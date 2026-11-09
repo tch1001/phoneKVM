@@ -69,6 +69,11 @@ Latency measured on the host (median / p95), same cable:
    `scripts/kvm-usb-tunnel.service` so `adb reverse tcp:8080 tcp:8080` survives
    replugs, then launch the app: it connects to `ws://127.0.0.1:8080/ws`.
 
+   The tunnel script finds `adb` itself (distro package, SDK, or local AOSP
+   build) because a systemd user unit does not inherit your shell PATH; set
+   `ADB=/path/to/adb` if it guesses wrong. Verify with
+   `adb -d reverse --list` showing `tcp:8080`.
+
 ## How the three pieces work
 
 **ROM.** `f_uac2` (audio sink) and `f_hid` (keyboard + mouse) are added to the
