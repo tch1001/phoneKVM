@@ -33,8 +33,17 @@ class KvmController {
     // The gadget exposes two HID functions: hid.usb0 is the keyboard
     // interface, hid.usb1 the mouse. Each needs its own fd - a mouse report
     // written to the keyboard node is dropped by the host.
-    private val kbdWriter = HidWriter(path = "/dev/hidg0")
-    private val mouseWriter = HidWriter(path = "/dev/hidg1")
+    // Reports go through the hidbridge daemon when it is running: Android
+    // refuses untrusted apps access to /dev/hidg* even with an allow rule.
+    private val bridgeAddr = java.net.InetSocketAddress("127.0.0.1", 7700)
+    private val kbdWriter = HidWriter(path = "/dev/hidg0").apply {
+        socketAddress = bridgeAddr
+        tag = 'K'.code.toByte()
+    }
+    private val mouseWriter = HidWriter(path = "/dev/hidg1").apply {
+        socketAddress = bridgeAddr
+        tag = 'M'.code.toByte()
+    }
     val mouse = HidMouse(mouseWriter)
     val keyboard = HidKeyboard(kbdWriter)
 
@@ -121,9 +130,12 @@ class KvmController {
 
     fun setHid(enabled: Boolean) {
         if (enabled) {
-            kbdWriter.open()
-            mouseWriter.open()
-            refreshHidState()
+            // Socket connect must not run on the main thread (StrictMode throws
+            // NetworkOnMainThreadException, whose message is null).
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                kbdWriter.open()
+                mouseWriter.open()
+            }
         } else {
             keyboard.releaseAll()
             mouse.releaseAll()

@@ -24,7 +24,7 @@ KVM console, not a full piKVM.
 | phone enumerates as USB keyboard (HID) | verified — typed into a focused window on the host |
 | phone enumerates as USB mouse (HID) | verified — host pointer followed drags |
 | desktop video, PC -> phone | verified, two codecs |
-| touch -> host cursor | verified end to end |
+| touch -> host cursor | verified end to end, SELinux Enforcing, no root on the app |
 | HDMI output from the phone | **not possible** — USB 2.0-only port, no DP alt mode |
 | DisplayLink adapter | **not implemented** — needs DL-1xx + a framebuffer pump |
 
@@ -88,12 +88,14 @@ stream header, so the JPEG path remains the fallback.
 x264 with `-tune ll -zerolatency`), serves over WebSocket, and replays incoming
 pointer/keyboard events through `uinput`.
 
-## Known gaps
+## Notes on the HID path
 
-- On the reference device the app writes `/dev/hidg*` directly while SELinux is
-  permissive. An `allow untrusted_app hidg_device:chr_file write` rule is in
-  this repo but was **not sufficient** at runtime; `hidbridge` is the intended
-  fix and is in the tree. See `docs/TRAPS.md` § SELinux.
+The app does **not** write `/dev/hidg*` itself. An
+`allow untrusted_app hidg_device:chr_file write` rule compiles and appears in
+the shipped policy, but Android still refuses the write at runtime, so the app
+talks to `hidbridge` on `127.0.0.1:7700` instead and the daemon (root, own
+domain) does the writing. This is verified working with SELinux **Enforcing**.
+See `docs/TRAPS.md` § SELinux.
 - DisplayLink (phone -> HDMI monitor) is parked: only DL-1xx has an open
   driver, and it requires USB host mode, which excludes the HID gadget role on
   a single port.

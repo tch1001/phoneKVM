@@ -48,7 +48,19 @@ class HidWriter(
     }
 
     private val lock = Any()
-    private var out: FileOutputStream? = null
+    private var out: java.io.OutputStream? = null
+    private var sock: java.net.Socket? = null
+
+    /**
+     * When set, reports are sent to the hidbridge daemon instead of written to
+     * [path]. Android refuses untrusted apps access to /dev/hidg* even with an
+     * SELinux allow rule, so the daemon (which runs as root in its own domain)
+     * is the supported route.
+     */
+    var socketAddress: java.net.InetSocketAddress? = null
+
+    /** Report tag for the daemon: 'K' = keyboard, 'M' = mouse. */
+    var tag: Byte = 'K'.code.toByte()
 
     private val _state = MutableStateFlow<State>(State.Closed)
     val state: StateFlow<State> = _state
@@ -63,6 +75,27 @@ class HidWriter(
     /** Opens the node. Returns false and records [lastError] on failure. */
     fun open(): Boolean = synchronized(lock) {
         closeLocked()
+
+        val addr = socketAddress
+        if (addr != null) {
+            try {
+                val s = java.net.Socket()
+                s.tcpNoDelay = true
+                s.connect(addr, 500)
+                sock = s
+                out = s.getOutputStream()
+                lastError = null
+                _state.value = State.Open
+                return true
+            } catch (e: Exception) {
+                // Daemon not running (or not built into this ROM yet): fall back
+                // to writing the node directly, which works where SELinux is
+                // permissive or the node really is writable.
+                Log.w(TAG, "hidbridge unreachable (${e.message}); using $path directly")
+                socketAddress = null
+            }
+        }
+
         val f = File(path)
         if (!f.exists() && createIfMissing) {
             f.parentFile?.mkdirs()
@@ -100,6 +133,12 @@ class HidWriter(
         } catch (e: IOException) {
             Log.w(TAG, "close: ${e.message}")
         }
+        try {
+            sock?.close()
+        } catch (e: IOException) {
+            Log.w(TAG, "close socket: ${e.message}")
+        }
+        sock = null
         out = null
     }
 
@@ -135,6 +174,7 @@ class HidWriter(
     fun write(report: ByteArray): Boolean = synchronized(lock) {
         val o = out ?: return false
         try {
+            if (sock != null) o.write(tag.toInt())
             o.write(report)
             o.flush()
             true

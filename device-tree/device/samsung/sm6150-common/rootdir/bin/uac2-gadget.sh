@@ -23,19 +23,21 @@ log() { log -t usb-extras "$*"; }
 # The HAL composes asynchronously: wait (bounded) for a config that already has
 # a linked function before touching anything.
 i=0
+# At boot the vendor HAL composes well after init starts us, so wait for both
+# the composition *and* a bound UDC (up to 60 s) instead of sampling once.
 CONF=""
-while [ $i -lt 40 ]; do
+UDC=""
+for i in $(seq 240); do
     CONF=$(ls -d $CFG/configs/* 2>/dev/null | head -n 1)
-    if [ -n "$CONF" ] && [ -n "$(ls -A "$CONF" 2>/dev/null | grep -v 'strings\|MaxPower\|bmAttributes')" ]; then
+    UDC=$(cat "$UDC_FILE" 2>/dev/null)
+    if [ -n "$CONF" ] && [ -n "$UDC" ] &&
+       [ -n "$(ls -A "$CONF" 2>/dev/null | grep -v 'strings\|MaxPower\|bmAttributes')" ]; then
         break
     fi
-    usleep 250000 2>/dev/null || sleep 1
-    i=$((i + 1))
+    sleep 0.25
 done
 [ -n "$CONF" ] || { log "no active composition"; exit 0; }
 CONFNAME=$(basename "$CONF")
-
-UDC=$(cat "$UDC_FILE" 2>/dev/null)
 [ -n "$UDC" ] || { log "gadget not bound"; exit 0; }
 
 changed=0

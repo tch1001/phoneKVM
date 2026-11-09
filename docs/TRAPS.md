@@ -84,7 +84,21 @@ neverallow check, and appears in the shipped
 Same app can write `/dev/null`, so it is not an MLS constraint and not DAC
 (node is 0666). Do not spend another ROM build on this. The supported path is
 the `hidbridge` daemon (root, own domain, owns the nodes, apps talk to
-`127.0.0.1:7700`) — it is included in `device-tree/`.
+`127.0.0.1:7700`) — it is included in `device-tree/` and verified working with
+SELinux Enforcing.
+
+If you write a client for it: connect the socket off the main thread. Android's
+StrictMode throws `NetworkOnMainThreadException`, whose `message` is **null**,
+so the failure surfaces as a bare "connect failed: null" that looks like a
+policy problem but is not.
+
+## The gadget script must wait for the HAL
+
+`uac2-gadget.sh` is started by property triggers, but the vendor USB HAL
+composes asynchronously after boot. A single sample of
+`/config/usb_gadget/g1` is not enough: the script waits up to 60 s for both a
+populated composition and a bound UDC, and init re-runs it on
+`sys.usb.config=*` and `sys.boot_completed=1` as well as `sys.usb.state=*`.
 
 ## The gadget node paths are per-interface
 

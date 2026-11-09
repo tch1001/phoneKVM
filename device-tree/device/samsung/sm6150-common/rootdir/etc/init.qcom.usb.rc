@@ -2375,3 +2375,12 @@ service uac2-gadget /vendor/bin/uac2-gadget.sh
 
 on property:sys.usb.state=*
     start uac2-gadget
+
+# The HAL composes asynchronously after boot, so the state trigger above can
+# fire before the gadget exists. Re-run once USB is configured and again once
+# boot completes; the script is idempotent and waits for the gadget itself.
+on property:sys.usb.config=*
+    start uac2-gadget
+
+on property:sys.boot_completed=1
+    start uac2-gadget
