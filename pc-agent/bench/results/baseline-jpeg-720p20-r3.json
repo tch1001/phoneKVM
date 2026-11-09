@@ -1,0 +1,32 @@
+{
+  "label": "baseline-jpeg-720p20-r3",
+  "port": 8096,
+  "samples": 380,
+  "intake_ms": {
+    "p50": 0.8,
+    "p95": 1.2,
+    "mean": 0.8
+  },
+  "transport_ms": {
+    "p50": 8.3,
+    "p95": 14.2,
+    "mean": 8.5
+  },
+  "decode_ms": {
+    "p50": 17.0,
+    "p95": 20.0,
+    "mean": 16.4
+  },
+  "render_ms": {
+    "p50": 25.0,
+    "p95": 34.0,
+    "mean": 25.7
+  },
+  "total_ms": {
+    "p50": 50.0,
+    "p95": 67.0,
+    "mean": 51.3
+  },
+  "kbps": 24286,
+  "kb_per_frame": 109.2
+}

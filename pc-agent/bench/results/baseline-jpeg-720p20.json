@@ -1,0 +1,52 @@
+{
+  "label": "baseline-jpeg-720p20",
+  "port": 8096,
+  "samples": 479,
+  "intake_ms": {
+    "p50": 0.7,
+    "p95": 1.2,
+    "mean": 0.8
+  },
+  "transport_ms": {
+    "p50": 0.8,
+    "p95": 24.5,
+    "mean": 2.0
+  },
+  "decode_ms": {
+    "p50": 17.0,
+    "p95": 21.0,
+    "mean": 16.4
+  },
+  "render_ms": {
+    "p50": 25.0,
+    "p95": 33.0,
+    "mean": 25.3
+  },
+  "total_ms": {
+    "p50": 42.0,
+    "p95": 66.0,
+    "mean": 44.5
+  },
+  "kbps": 22893,
+  "kb_per_frame": 105.0,
+  "optical": [
+    {
+      "pattern": 214,
+      "latency_from_cmd_start_ms": 9.8,
+      "latency_from_cmd_end_ms": 625.2,
+      "pattern_age_ms": 625.2
+    },
+    {
+      "pattern": 84,
+      "latency_from_cmd_start_ms": 3.0,
+      "latency_from_cmd_end_ms": 618.4,
+      "pattern_age_ms": 618.4
+    },
+    {
+      "pattern": 208,
+      "latency_from_cmd_start_ms": 1.2,
+      "latency_from_cmd_end_ms": 666.8,
+      "pattern_age_ms": 666.8
+    }
+  ]
+}

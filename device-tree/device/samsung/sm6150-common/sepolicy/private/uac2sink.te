@@ -1,0 +1,46 @@
+# uac2sink — bridges the UAC2 USB gadget capture PCM to the primary audio
+# output so the device acts as a USB speaker.
+#
+# Kicked off by init (see uac2sink.rc, installed to /system_ext/etc/init).
+# Needs: the gadget PCM under /dev/snd, /proc/asound to find its card by name,
+# and binder access to audioserver for AAudio playback.
+
+type uac2sink, domain;
+type uac2sink_exec, exec_type, file_type, system_file_type;
+
+# Runs from /system_ext: declare it a coredomain so the coredomain entrypoint
+# rule (which allows system_file_type) applies to it.
+typeattribute uac2sink coredomain;
+
+init_daemon_domain(uac2sink)
+
+# UAC2 gadget capture PCM (/dev/snd/pcmC<x>D0c)
+allow uac2sink audio_device:dir r_dir_perms;
+allow uac2sink audio_device:chr_file rw_file_perms;
+
+# /proc/asound/cards — locate the gadget card by name, not index.
+# This device labels /proc/asound as vendor_proc_audiod, a vendor type the
+# platform policy cannot reference, so the daemon reads the card id from
+# /sys/class/sound/card*/id instead (see findUac2Card).
+# (kept for the audioserver-style path; the card lookup itself goes through
+# /dev/snd/controlC* -> SNDRV_CTL_IOCTL_CARD_INFO, which needs audio_device)
+allow uac2sink proc_asound:dir r_dir_perms;
+allow uac2sink proc_asound:file r_file_perms;
+
+# AAudio resolves its servers through servicemanager before any binder call
+allow uac2sink audioserver_service:service_manager find;
+allow uac2sink audio_service:service_manager find;
+allow uac2sink mediametrics_service:service_manager find;
+
+# AAudio client side
+binder_use(uac2sink)
+allow uac2sink audioserver:binder { call transfer };
+allow uac2sink audioserver:fd use;
+
+# AAudio raises the callback thread priority
+allow uac2sink self:capability sys_nice;
+allow uac2sink self:process { setsched getsched };
+
+# logcat (ALOGI/ALOGW); failures here are harmless
+allow uac2sink logd:unix_stream_socket connectto;
+allow uac2sink logd_socket:sock_file write;

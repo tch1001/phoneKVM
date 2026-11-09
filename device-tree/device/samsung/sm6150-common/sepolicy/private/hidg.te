@@ -1,0 +1,10 @@
+# USB HID gadget nodes written by userspace.
+#
+# The kvm-lite app turns the phone into a keyboard/mouse for a host PC. It is
+# an ordinary untrusted app, so the grant is scoped to the dedicated
+# hidg_device type instead of the generic device type: no other consumer can
+# reach these nodes, and ueventd exports them 0666 (see ueventd.qcom.rc) so the
+# app needs no group membership.
+type hidg_device, dev_type;
+
+allow untrusted_app hidg_device:chr_file rw_file_perms;

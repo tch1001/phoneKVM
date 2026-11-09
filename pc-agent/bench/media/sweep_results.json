@@ -1,0 +1,222 @@
+[
+  {
+    "source": "src_scroll.mkv",
+    "config": "jpeg 720p q6 (today)",
+    "height": 720,
+    "kb_per_frame": 122.6,
+    "mbps_at_20fps": 20.08,
+    "ssim": 0.7963,
+    "cpu_ms_per_frame": 19.8,
+    "encode_fps": 217.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "jpeg 1080p q6",
+    "height": 1080,
+    "kb_per_frame": 236.6,
+    "mbps_at_20fps": 38.77,
+    "ssim": 0.8022,
+    "cpu_ms_per_frame": 27.86,
+    "encode_fps": 121.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "jpeg 1080p q3",
+    "height": 1080,
+    "kb_per_frame": 312.2,
+    "mbps_at_20fps": 51.16,
+    "ssim": 0.8036,
+    "cpu_ms_per_frame": 28.73,
+    "encode_fps": 121.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "x264 superfast zl crf18 1080p",
+    "height": 1080,
+    "kb_per_frame": 6.1,
+    "mbps_at_20fps": 0.99,
+    "ssim": 0.9992,
+    "cpu_ms_per_frame": 32.51,
+    "encode_fps": 141.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "x264 ultrafast zl crf18 1080p",
+    "height": 1080,
+    "kb_per_frame": 8.9,
+    "mbps_at_20fps": 1.45,
+    "ssim": 0.9994,
+    "cpu_ms_per_frame": 23.67,
+    "encode_fps": 163.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "nvenc p1 ll cbr6M 1080p",
+    "height": 1080,
+    "kb_per_frame": 24.4,
+    "mbps_at_20fps": 4.0,
+    "ssim": 0.9972,
+    "cpu_ms_per_frame": 13.94,
+    "encode_fps": 159.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "nvenc p1 ll cbr10M 1080p",
+    "height": 1080,
+    "kb_per_frame": 40.7,
+    "mbps_at_20fps": 6.67,
+    "ssim": 0.9985,
+    "cpu_ms_per_frame": 14.33,
+    "encode_fps": 129.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "nvenc p1 ll cbr16M 1080p",
+    "height": 1080,
+    "kb_per_frame": 65.5,
+    "mbps_at_20fps": 10.74,
+    "ssim": 0.9994,
+    "cpu_ms_per_frame": 13.98,
+    "encode_fps": 131.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "nvenc p1 ll cbr10M 720p",
+    "height": 720,
+    "kb_per_frame": 40.8,
+    "mbps_at_20fps": 6.68,
+    "ssim": 0.9659,
+    "cpu_ms_per_frame": 12.37,
+    "encode_fps": 167.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "hevc_nvenc p1 ll cbr5M 1080p",
+    "height": 1080,
+    "kb_per_frame": 6.4,
+    "mbps_at_20fps": 1.05,
+    "ssim": 0.9973,
+    "cpu_ms_per_frame": 13.81,
+    "encode_fps": 170.0
+  },
+  {
+    "source": "src_scroll.mkv",
+    "config": "hevc_nvenc p1 ll cbr8M 1080p",
+    "height": 1080,
+    "kb_per_frame": 8.3,
+    "mbps_at_20fps": 1.36,
+    "ssim": 0.9984,
+    "cpu_ms_per_frame": 13.53,
+    "encode_fps": 168.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "jpeg 720p q6 (today)",
+    "height": 720,
+    "kb_per_frame": 138.9,
+    "mbps_at_20fps": 22.76,
+    "ssim": 0.9266,
+    "cpu_ms_per_frame": 16.7,
+    "encode_fps": 232.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "jpeg 1080p q6",
+    "height": 1080,
+    "kb_per_frame": 265.7,
+    "mbps_at_20fps": 43.53,
+    "ssim": 0.9853,
+    "cpu_ms_per_frame": 25.22,
+    "encode_fps": 129.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "jpeg 1080p q3",
+    "height": 1080,
+    "kb_per_frame": 369.0,
+    "mbps_at_20fps": 60.46,
+    "ssim": 0.9935,
+    "cpu_ms_per_frame": 26.84,
+    "encode_fps": 126.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "x264 superfast zl crf18 1080p",
+    "height": 1080,
+    "kb_per_frame": 4.7,
+    "mbps_at_20fps": 0.77,
+    "ssim": 0.9982,
+    "cpu_ms_per_frame": 29.44,
+    "encode_fps": 152.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "x264 ultrafast zl crf18 1080p",
+    "height": 1080,
+    "kb_per_frame": 7.9,
+    "mbps_at_20fps": 1.29,
+    "ssim": 0.9986,
+    "cpu_ms_per_frame": 20.71,
+    "encode_fps": 177.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "nvenc p1 ll cbr6M 1080p",
+    "height": 1080,
+    "kb_per_frame": 24.4,
+    "mbps_at_20fps": 4.0,
+    "ssim": 0.9904,
+    "cpu_ms_per_frame": 11.47,
+    "encode_fps": 157.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "nvenc p1 ll cbr10M 1080p",
+    "height": 1080,
+    "kb_per_frame": 40.7,
+    "mbps_at_20fps": 6.67,
+    "ssim": 0.9938,
+    "cpu_ms_per_frame": 11.14,
+    "encode_fps": 155.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "nvenc p1 ll cbr16M 1080p",
+    "height": 1080,
+    "kb_per_frame": 65.1,
+    "mbps_at_20fps": 10.67,
+    "ssim": 0.9967,
+    "cpu_ms_per_frame": 11.8,
+    "encode_fps": 157.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "nvenc p1 ll cbr10M 720p",
+    "height": 720,
+    "kb_per_frame": 40.7,
+    "mbps_at_20fps": 6.67,
+    "ssim": 0.9381,
+    "cpu_ms_per_frame": 11.29,
+    "encode_fps": 201.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "hevc_nvenc p1 ll cbr5M 1080p",
+    "height": 1080,
+    "kb_per_frame": 7.6,
+    "mbps_at_20fps": 1.25,
+    "ssim": 0.9909,
+    "cpu_ms_per_frame": 12.44,
+    "encode_fps": 155.0
+  },
+  {
+    "source": "src_lossless.mkv",
+    "config": "hevc_nvenc p1 ll cbr8M 1080p",
+    "height": 1080,
+    "kb_per_frame": 13.9,
+    "mbps_at_20fps": 2.28,
+    "ssim": 0.994,
+    "cpu_ms_per_frame": 11.97,
+    "encode_fps": 154.0
+  }
+]

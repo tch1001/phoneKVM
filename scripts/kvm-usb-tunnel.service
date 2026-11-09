@@ -1,0 +1,11 @@
+[Unit]
+Description=KVM-lite: keep the USB adb reverse tunnel to the PC agent up
+After=default.target
+
+[Service]
+ExecStart=%h/.local/bin/kvm-usb-tunnel.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

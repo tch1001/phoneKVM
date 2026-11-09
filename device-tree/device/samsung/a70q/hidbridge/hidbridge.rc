@@ -1,0 +1,7 @@
+service hidbridge /system_ext/bin/hidbridge
+    class late_start
+    user root
+    group root system
+    # Owns /dev/hidg0 + /dev/hidg1 and exposes a 127.0.0.1 line protocol, so
+    # apps can inject keyboard/mouse without root or HID SELinux access.
+    seclabel u:r:hidbridge:s0

@@ -1,0 +1,17 @@
+# hidbridge — root daemon that owns the USB HID gadget nodes so ordinary apps
+# can drive the phone's keyboard/mouse function without opening a character
+# device themselves (Android refuses untrusted_app that access even with an
+# allow rule; see hidg.te). Apps reach it on 127.0.0.1:7700 instead.
+
+type hidbridge, domain;
+type hidbridge_exec, exec_type, file_type, system_file_type;
+typeattribute hidbridge coredomain;
+
+init_daemon_domain(hidbridge)
+
+# Own the gadget nodes: /dev/hidg0 keyboard, /dev/hidg1 mouse
+allow hidbridge hidg_device:chr_file rw_file_perms;
+
+# Localhost control socket for apps
+net_domain(hidbridge)
+allow hidbridge node:tcp_socket node_bind;

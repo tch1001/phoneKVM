@@ -1,0 +1,10 @@
+/system_ext/bin/uac2sink    u:object_r:uac2sink_exec:s0
+# This tree folds system_ext into /system, so the on-disk path is what the
+# build labels: without this line the daemon lands as system_file and init
+# cannot exec it (avc: denied { entrypoint }).
+/system/system_ext/bin/uac2sink    u:object_r:uac2sink_exec:s0
+/system_ext/bin/hidbridge    u:object_r:hidbridge_exec:s0
+/system/system_ext/bin/hidbridge    u:object_r:hidbridge_exec:s0
+
+# USB HID gadget nodes: /dev/hidg0 keyboard, /dev/hidg1 mouse
+/dev/hidg[0-9]*    u:object_r:hidg_device:s0

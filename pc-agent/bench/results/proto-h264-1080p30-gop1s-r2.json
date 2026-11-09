@@ -1,0 +1,32 @@
+{
+  "label": "proto-h264-1080p30-gop1s-r2",
+  "port": 8095,
+  "samples": 547,
+  "intake_ms": {
+    "p50": 0.8,
+    "p95": 1.2,
+    "mean": 0.8
+  },
+  "transport_ms": {
+    "p50": 9.0,
+    "p95": 39.2,
+    "mean": 11.1
+  },
+  "decode_ms": {
+    "p50": 21.0,
+    "p95": 39.0,
+    "mean": 23.1
+  },
+  "render_ms": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.0
+  },
+  "total_ms": {
+    "p50": 33.0,
+    "p95": 60.0,
+    "mean": 35.1
+  },
+  "kbps": 15636,
+  "kb_per_frame": 48.9
+}

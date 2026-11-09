@@ -1,0 +1,14 @@
+cc_binary {
+    name: "hidbridge",
+    srcs: ["hidbridge.cpp"],
+    system_ext_specific: true,
+    init_rc: ["hidbridge.rc"],
+    shared_libs: [
+        "liblog",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+    ],
+}

@@ -1,0 +1,32 @@
+{
+  "label": "proto-h264-intrarefresh",
+  "port": 8095,
+  "samples": 543,
+  "intake_ms": {
+    "p50": 0.8,
+    "p95": 1.2,
+    "mean": 0.8
+  },
+  "transport_ms": {
+    "p50": 9.9,
+    "p95": 38.7,
+    "mean": 12.9
+  },
+  "decode_ms": {
+    "p50": 20.0,
+    "p95": 38.0,
+    "mean": 23.1
+  },
+  "render_ms": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.0
+  },
+  "total_ms": {
+    "p50": 35.0,
+    "p95": 61.0,
+    "mean": 36.8
+  },
+  "kbps": 12936,
+  "kb_per_frame": 40.7
+}

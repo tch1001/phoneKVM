@@ -1,0 +1,14 @@
+# Android
+app/.gradle/
+app/build/
+app/local.properties
+*.iml
+
+# Python
+pc-agent/.venv/
+__pycache__/
+*.pyc
+*.jsonl
+
+# build artefacts
+*.log

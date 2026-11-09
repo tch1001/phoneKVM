@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kvm-lite &middot; PC screen</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14181d;
+    --line: #232a32;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #3ddc97;
+    --warn: #ffb020;
+    --bad: #ff5d5d;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .brand { font-weight: 650; letter-spacing: .02em; }
+  .brand span { color: var(--accent); }
+  .chip { font: 11px/1 var(--mono); color: var(--muted); background: #0f1317;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 9px;
+    white-space: nowrap; }
+  .chip b { color: var(--text); font-weight: 600; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--bad); margin-right: 6px; vertical-align: 1px; }
+  .dot.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .spacer { flex: 1; }
+  button { font: 12px system-ui, sans-serif; color: var(--text); background: #1b222a;
+    border: 1px solid var(--line); border-radius: 7px; padding: 6px 11px; cursor: pointer; }
+  button:hover { border-color: #33404d; }
+  main { flex: 1; min-height: 0; display: flex; align-items: center;
+    justify-content: center; padding: 10px; position: relative; background:
+    radial-gradient(circle at 50% 0%, #101418 0%, var(--bg) 70%); }
+  canvas { display: block; background: #000; border-radius: 6px; outline: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,.55); cursor: crosshair; touch-action: none; }
+  canvas:focus-visible { box-shadow: 0 0 0 2px var(--accent), 0 10px 40px rgba(0,0,0,.55); }
+  .placeholder { position: absolute; color: var(--muted); font: 12px var(--mono);
+    text-align: center; padding: 20px; }
+  footer { display: flex; gap: 16px; align-items: baseline; padding: 7px 12px;
+    background: var(--panel); border-top: 1px solid var(--line); flex-wrap: wrap; }
+  #log { color: var(--muted); font: 11px/1.45 var(--mono); flex: 1; min-width: 240px;
+    max-height: 80px; overflow: hidden; }
+  #log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #log b { color: var(--accent); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 11px; }
+  .err { color: var(--bad); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">kvm<span>-lite</span></div>
+  <div class="chip"><span class="dot" id="dot"></span><b id="state">connecting</b></div>
+  <div class="chip"><b id="fps">0.0</b> fps</div>
+  <div class="chip"><b id="kbs">0</b> kB/s</div>
+  <div class="chip"><b id="fsize">0</b> kB/frame</div>
+  <div class="chip">seq <b id="seq">0</b></div>
+  <div class="chip"><b id="res">&mdash;</b></div>
+  <div class="chip">decode <b id="dec">0</b> ms</div>
+  <div class="spacer"></div>
+  <button id="ping">ping</button>
+  <button id="fs">fullscreen</button>
+</header>
+<main id="stage">
+  <div class="placeholder" id="ph">waiting for the first frame&hellip;</div>
+  <canvas id="screen" tabindex="0"></canvas>
+</main>
+<footer>
+  <div id="log"></div>
+  <div class="hint">click the image, then move / click / scroll / type &mdash; events are sent to the PC agent</div>
+</footer>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("screen"), ctx = canvas.getContext("2d", { alpha: false });
+  let ws = null, hello = null, streamW = 0, streamH = 0;
+  let latest = null, busy = false, lastSeq = 0, gaps = 0, decodeMs = 0;
+  let recv = 0, recvBytes = 0, lastStat = performance.now();
+  let backoff = 250, wantOpen = true;
+
+  const logEl = $("log");
+  function log(html) {
+    const d = document.createElement("div");
+    d.innerHTML = html;
+    logEl.prepend(d);
+    while (logEl.childElementCount > 6) logEl.lastChild.remove();
+  }
+  function setState(text, ok) {
+    $("state").textContent = text;
+    $("dot").classList.toggle("on", !!ok);
+  }
+
+  // ---------------------------------------------------------------- layout
+  function fit() {
+    const stage = $("stage");
+    const pad = 20;
+    const availW = stage.clientWidth - pad, availH = stage.clientHeight - pad;
+    if (!streamW || !streamH) return;
+    const scale = Math.min(availW / streamW, availH / streamH, 4);
+    canvas.style.width = Math.max(1, Math.floor(streamW * scale)) + "px";
+    canvas.style.height = Math.max(1, Math.floor(streamH * scale)) + "px";
+  }
+  addEventListener("resize", fit);
+
+  // ------------------------------------------------------------ ws / frames
+  function connect() {
+    const url = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
+    setState("connecting", false);
+    ws = new WebSocket(url);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { backoff = 250; setState("connected", true); log("ws open " + url); };
+    ws.onclose = (e) => {
+      setState("disconnected", false);
+      if (!wantOpen) return;
+      setTimeout(connect, backoff);
+      backoff = Math.min(backoff * 1.7, 5000);
+      log(`<span class="err">ws closed (${e.code})</span> retrying in ${Math.round(backoff)} ms`);
+    };
+    ws.onerror = () => log('<span class="err">ws error</span>');
+    ws.onmessage = (ev) => {
+      if (typeof ev.data === "string") { onJson(JSON.parse(ev.data)); return; }
+      onFrame(ev.data);
+    };
+  }
+
+  function onJson(msg) {
+    if (msg.t === "hello") {
+      hello = msg;
+      streamW = msg.width; streamH = msg.height;
+      canvas.width = streamW; canvas.height = streamH;
+      $("res").textContent = `${streamW}\u00d7${streamH}`;
+      fit();
+      log(`hello: ${msg.source || "?"} ${streamW}x${streamH} @ ${msg.fps} fps, ` +
+          `${msg.codec}, ${msg.header_bytes}B header`);
+    } else if (msg.t === "ack") {
+      const bits = [`<b>${msg.type}</b>`];
+      if (msg.x != null) bits.push(`${msg.x},${msg.y}`);
+      if (msg.px != null) bits.push(`\u2192 ${msg.px},${msg.py}`);
+      if (msg.button != null) bits.push(`btn${msg.button}`);
+      if (msg.key != null) bits.push(`${msg.action || ""} ${msg.key}`);
+      if (msg.dy != null) bits.push(`dy${msg.dy}`);
+      log("ack " + bits.join(" "));
+    } else if (msg.t === "stats") {
+      $("fsize").textContent = (msg.avg_frame_bytes / 1024).toFixed(1);
+    } else if (msg.t === "pong") {
+      const rtt = (performance.now() - pingSent).toFixed(1);
+      log(`pong ${rtt} ms`);
+    } else if (msg.t === "error") {
+      log('<span class="err">error: ' + msg.msg + "</span>");
+    }
+  }
+
+  function onFrame(buf) {
+    const dv = new DataView(buf);
+    const magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
+    if (magic !== "KVM1") { log('<span class="err">bad magic ' + magic + "</span>"); return; }
+    const headerBytes = 24;
+    const seq = dv.getUint32(8, true);
+    const w = dv.getUint32(12, true), h = dv.getUint32(16, true);
+    if (lastSeq && seq !== lastSeq + 1 && seq > lastSeq) gaps += seq - lastSeq - 1;
+    lastSeq = seq;
+    recv++; recvBytes += buf.byteLength;
+    if (w !== canvas.width || h !== canvas.height) {
+      streamW = w; streamH = h; canvas.width = w; canvas.height = h;
+      $("res").textContent = `${w}\u00d7${h}`; fit();
+    }
+    $("seq").textContent = seq;
+    $("ph").style.display = "none";
+    const blob = new Blob([new Uint8Array(buf, headerBytes)], { type: "image/jpeg" });
+    latest = { blob, seq };
+    if (!busy) pump();
+  }
+
+  async function pump() {
+    busy = true;
+    while (latest) {
+      const item = latest; latest = null;
+      const t0 = performance.now();
+      try {
+        const bmp = await createImageBitmap(item.blob);
+        ctx.drawImage(bmp, 0, 0);
+        bmp.close && bmp.close();
+      } catch (err) {
+        log('<span class="err">decode failed: ' + err + "</span>");
+      }
+      decodeMs = performance.now() - t0;
+    }
+    busy = false;
+  }
+
+  setInterval(() => {
+    const now = performance.now();
+    const dt = (now - lastStat) / 1000;
+    if (dt > 0.5) {
+      $("fps").textContent = (recv / dt).toFixed(1);
+      $("kbs").textContent = (recvBytes / dt / 1024).toFixed(0);
+      $("dec").textContent = decodeMs.toFixed(1);
+      recv = 0; recvBytes = 0; lastStat = now;
+    }
+  }, 1000);
+
+  // ---------------------------------------------------------------- input
+  function send(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+  }
+  function toStream(e) {
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width * streamW;
+    const y = (e.clientY - r.top) / r.height * streamH;
+    return { x: Math.max(0, Math.min(streamW - 1, Math.round(x))),
+             y: Math.max(0, Math.min(streamH - 1, Math.round(y))) };
+  }
+  const BTN = { 0: "left", 1: "middle", 2: "right" };
+
+  let pendingMove = null, moveScheduled = false;
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.focus();
+    canvas.setPointerCapture(e.pointerId);
+    const p = toStream(e);
+    send({ t: "mousedown", button: BTN[e.button] || "left", x: p.x, y: p.y });
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    const p = toStream(e);
+    send({ t: "mouseup", button: BTN[e.button] || "left", x: p.x, y: p.y });
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    const p = toStream(e);
+    pendingMove = p;
+    if (!moveScheduled) {
+      moveScheduled = true;
+      requestAnimationFrame(() => {
+        moveScheduled = false;
+        if (pendingMove) send({ t: "mousemove", x: pendingMove.x, y: pendingMove.y });
+      });
+    }
+  });
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const p = toStream(e);
+    const lines = Math.max(1, Math.min(10, Math.round(Math.abs(e.deltaY) / 100) || 1));
+    send({ t: "scroll", x: p.x, y: p.y, dx: 0, dy: e.deltaY > 0 ? -lines : lines });
+  }, { passive: false });
+
+  const held = new Set();
+  function mods(e) {
+    const m = [];
+    if (e.ctrlKey) m.push("ctrl");
+    if (e.shiftKey) m.push("shift");
+    if (e.altKey) m.push("alt");
+    if (e.metaKey) m.push("super");
+    return m;
+  }
+  canvas.addEventListener("keydown", (e) => {
+    e.preventDefault();
+    if (held.has(e.code)) return;
+    held.add(e.code);
+    send({ t: "key", key: e.key, code: e.code, action: "down", mods: mods(e) });
+  });
+  canvas.addEventListener("keyup", (e) => {
+    e.preventDefault();
+    held.delete(e.code);
+    send({ t: "key", key: e.key, code: e.code, action: "up", mods: mods(e) });
+  });
+  canvas.addEventListener("blur", () => {
+    for (const code of held) send({ t: "key", key: code, code, action: "up", mods: [] });
+    held.clear();
+  });
+
+  // --------------------------------------------------------------- buttons
+  let pingSent = 0;
+  $("ping").onclick = () => { pingSent = performance.now(); send({ t: "ping" }); };
+  $("fs").onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch((e) => log("fullscreen: " + e));
+  };
+  addEventListener("beforeunload", () => { wantOpen = false; if (ws) ws.close(); });
+
+  connect();
+})();
+</script>
+</body>
+</html>

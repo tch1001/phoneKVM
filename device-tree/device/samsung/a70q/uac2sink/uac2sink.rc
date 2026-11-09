@@ -1,0 +1,8 @@
+service uac2sink /system_ext/bin/uac2sink
+    class late_start
+    user system
+    group audio system
+    # Media playback only: the daemon reads the UAC2 gadget capture PCM and
+    # replays it to the primary output. It stays resident and goes back to
+    # waiting when the cable is pulled, so replugging needs no restart.
+    seclabel u:r:uac2sink:s0

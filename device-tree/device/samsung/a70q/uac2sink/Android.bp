@@ -1,0 +1,20 @@
+cc_binary {
+    name: "uac2sink",
+    srcs: ["uac2sink.cpp"],
+
+    // system_ext, not /system: this device's vendor policy is the natural
+    // place for the domain, and vendor policy may not label system files.
+    system_ext_specific: true,
+    init_rc: ["uac2sink.rc"],
+
+    shared_libs: [
+        "libaaudio",
+        "liblog",
+        "libtinyalsa",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+    ],
+}
